@@ -386,11 +386,11 @@
 (function(){
   var KEY='dmex_auth',HASH='ca7193bc343e5c71cddf019480ccc0fb1fc70307ad4922b31cfbc4ef257e4237';
   async function sha256(s){var b=new TextEncoder().encode(s);var h=await crypto.subtle.digest('SHA-256',b);return Array.from(new Uint8Array(h)).map(function(x){return x.toString(16).padStart(2,'0')}).join('');}
-  if(sessionStorage.getItem(KEY)==='1'){document.getElementById('pw-gate').style.display='none';}
+  if(localStorage.getItem(KEY)==='1'){document.getElementById('pw-gate').style.display='none';}
   else{document.getElementById('pw-gate').style.display='flex';document.body.style.overflow='hidden';}
   document.getElementById('pw-btn').onclick=async function(){
     var v=document.getElementById('pw-input').value;
-    if(await sha256(v)===HASH){sessionStorage.setItem(KEY,'1');document.getElementById('pw-gate').style.display='none';document.body.style.overflow='';}
+    if(await sha256(v)===HASH){localStorage.setItem(KEY,'1');document.getElementById('pw-gate').style.display='none';document.body.style.overflow='';}
     else{document.getElementById('pw-error').style.display='block';document.getElementById('pw-input').style.borderColor='#ef4444';}
   };
   document.getElementById('pw-input').onkeydown=function(e){if(e.key==='Enter')document.getElementById('pw-btn').click();};
