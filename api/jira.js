@@ -9,7 +9,7 @@ export default async function handler(req, res) {
   const auth = Buffer.from(`${JIRA_EMAIL}:${JIRA_API_TOKEN}`).toString('base64');
 
   try {
-    const response = await fetch('https://useradgents.atlassian.net/rest/api/3/search/jql', {
+    const response = await fetch('https://useradgents.atlassian.net/rest/api/3/search', {
       method: 'POST',
       headers: {
         'Authorization': `Basic ${auth}`,
