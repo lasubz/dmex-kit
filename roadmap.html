@@ -953,16 +953,18 @@
     var now = new Date();
     var currentMonthKey = (now.getMonth() + 1) + '/' + now.getFullYear();
 
-    // Compute Jira charge per designer per month (from active issues with estimates)
-    var chargeByDesigner = {};
+    // Compute Jira charge per designer (match by first name)
+    // Build a map: firstName (lowercase) → total charge in days
+    var chargeByFirst = {};
     allIssues.forEach(function(issue) {
       var f = issue.fields;
       var cat = f.status && f.status.statusCategory ? f.status.statusCategory.name : '';
       if (cat === 'Terminé' || (f.status && f.status.name === 'ANNULÉ')) return;
-      var name = f.assignee ? f.assignee.displayName : null;
-      if (!name || !f.timeoriginalestimate) return;
-      if (!chargeByDesigner[name]) chargeByDesigner[name] = 0;
-      chargeByDesigner[name] += f.timeoriginalestimate / SECONDS_PER_DAY;
+      var fullName = f.assignee ? f.assignee.displayName : null;
+      if (!fullName || !f.timeoriginalestimate) return;
+      var first = fullName.split(' ')[0].toLowerCase();
+      if (!chargeByFirst[first]) chargeByFirst[first] = 0;
+      chargeByFirst[first] += f.timeoriginalestimate / SECONDS_PER_DAY;
     });
 
     // Determine which months to show (current + next 3)
@@ -972,14 +974,15 @@
     var visibleMonths = allMonths.slice(startIdx, startIdx + 4);
     var monthLabels = ['Jan','Fév','Mar','Avr','Mai','Juin','Juil','Aoû','Sep','Oct','Nov','Déc'];
 
-    // Grid columns: name + lot + months
-    var cols = '180px 80px' + visibleMonths.map(function(){ return ' 1fr'; }).join('');
+    // Total dispo per designer across visible months
+    var cols = '160px 80px 80px' + visibleMonths.map(function(){ return ' 1fr'; }).join('');
 
     var html = '<div class="cap-table">';
     // Header
     html += '<div class="cap-row cap-header" style="grid-template-columns:' + cols + '">';
     html += '<div class="cap-cell">Designer</div>';
     html += '<div class="cap-cell">Lot</div>';
+    html += '<div class="cap-cell">Charge Jira</div>';
     visibleMonths.forEach(function(m) {
       var parts = m.split('/');
       var label = monthLabels[parseInt(parts[0]) - 1] + ' ' + parts[1].substring(2);
@@ -991,27 +994,33 @@
     // Designer rows
     capacityData.designers.forEach(function(d) {
       if (!d.name) return;
-      var totalCharge = chargeByDesigner[d.name] || 0;
-      // Spread charge evenly across visible months (simplified — Jira doesn't have per-month data)
-      var chargePerMonth = visibleMonths.length ? totalCharge / visibleMonths.length : 0;
+      var firstName = d.name.split(' ')[0].toLowerCase();
+      var totalCharge = chargeByFirst[firstName] || 0;
+      var totalDispo = 0;
+      visibleMonths.forEach(function(m){ totalDispo += (d.availability[m] || 0); });
+      var globalPct = totalDispo > 0 ? Math.round(totalCharge / totalDispo * 100) : 0;
+      var globalClass = globalPct <= 70 ? 'cap-bar-ok' : globalPct <= 90 ? 'cap-bar-warn' : 'cap-bar-over';
 
       html += '<div class="cap-row" style="grid-template-columns:' + cols + '">';
       html += '<div class="cap-cell">' + esc(d.name) + '</div>';
       html += '<div class="cap-cell">' + esc(d.lot) + '</div>';
+      // Global charge cell
+      html += '<div class="cap-cell"><div class="cap-month">';
+      if (totalCharge > 0) {
+        html += '<span class="cap-dispo" style="color:var(--s600)">' + Math.round(totalCharge * 10) / 10 + 'j</span>';
+        html += '<div class="cap-bar"><div class="cap-bar-fill ' + globalClass + '" style="width:' + Math.min(100, globalPct) + '%"></div></div>';
+      } else {
+        html += '<span class="cap-charge">—</span>';
+      }
+      html += '</div></div>';
 
       visibleMonths.forEach(function(m) {
         var dispo = d.availability[m] || 0;
         var isCurrent = m === currentMonthKey;
-        var pct = dispo > 0 ? Math.min(100, Math.round(chargePerMonth / dispo * 100)) : 0;
-        var barClass = pct <= 70 ? 'cap-bar-ok' : pct <= 90 ? 'cap-bar-warn' : 'cap-bar-over';
 
         html += '<div class="cap-cell' + (isCurrent ? ' cap-current' : '') + '">';
         html += '<div class="cap-month">';
         html += '<span class="cap-dispo">' + dispo + 'j</span>';
-        if (chargePerMonth > 0) {
-          html += '<span class="cap-charge">' + Math.round(chargePerMonth * 10) / 10 + 'j chargés</span>';
-          html += '<div class="cap-bar"><div class="cap-bar-fill ' + barClass + '" style="width:' + pct + '%"></div></div>';
-        }
         html += '</div></div>';
       });
 
