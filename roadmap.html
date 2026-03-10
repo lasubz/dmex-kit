@@ -572,14 +572,15 @@
     });
   }
 
-  function fetchAllPages(acc, startAt) {
-    startAt = startAt || 0;
-    return fetch('/api/jira?startAt=' + startAt)
+  function fetchAllPages(acc, nextPageToken) {
+    var url = '/api/jira';
+    if (nextPageToken) url += '?nextPageToken=' + encodeURIComponent(nextPageToken);
+    return fetch(url)
       .then(function(r){ if(!r.ok) throw new Error(r.status); return r.json(); })
       .then(function(data){
         var issues = acc.concat(data.issues || []);
-        if (data.startAt + data.maxResults < data.total) {
-          return fetchAllPages(issues, startAt + data.maxResults);
+        if (data.nextPageToken) {
+          return fetchAllPages(issues, data.nextPageToken);
         }
         return issues;
       });

@@ -5,27 +5,32 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'Jira credentials not configured' });
   }
 
-  const startAt = parseInt(req.query.startAt) || 0;
+  const nextPageToken = req.query.nextPageToken || undefined;
   const auth = Buffer.from(`${JIRA_EMAIL}:${JIRA_API_TOKEN}`).toString('base64');
 
+  const body = {
+    jql: 'project = EDF',
+    maxResults: 100,
+    fields: [
+      'summary', 'status', 'assignee', 'issuetype', 'labels',
+      'priority', 'duedate', 'timeoriginalestimate', 'timetracking',
+      'created', 'customfield_12448'
+    ]
+  };
+
+  if (nextPageToken) {
+    body.nextPageToken = nextPageToken;
+  }
+
   try {
-    const response = await fetch('https://useradgents.atlassian.net/rest/api/3/search', {
+    const response = await fetch('https://useradgents.atlassian.net/rest/api/3/search/jql', {
       method: 'POST',
       headers: {
         'Authorization': `Basic ${auth}`,
         'Content-Type': 'application/json',
         'Accept': 'application/json'
       },
-      body: JSON.stringify({
-        jql: 'project = EDF',
-        maxResults: 100,
-        startAt: startAt,
-        fields: [
-          'summary', 'status', 'assignee', 'issuetype', 'labels',
-          'priority', 'duedate', 'timeoriginalestimate', 'timetracking',
-          'created', 'customfield_12448'
-        ]
-      })
+      body: JSON.stringify(body)
     });
 
     if (!response.ok) {
