@@ -13,10 +13,10 @@ export default async function handler(req, res) {
 
     // Spreadsheet ID from the URL
     const spreadsheetId = '1ab-LP89C9UDSXLeGsdnkJwSaMtzwIRQ9vz209xh6ZyA';
-    // Read the full data range (skip budget rows, just get designer rows)
-    const range = encodeURIComponent('A5:N13');
+    // Read rows 3-13 (row 3 = month headers, row 4 = column headers, rows 5+ = data)
+    const range = encodeURIComponent('A3:Q15');
 
-    const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${range}`;
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${range}?valueRenderOption=UNFORMATTED_VALUE`;
     const response = await fetch(url, {
       headers: { 'Authorization': `Bearer ${token}` }
     });
@@ -29,24 +29,50 @@ export default async function handler(req, res) {
     const data = await response.json();
     const rows = data.values || [];
 
-    // Parse into structured data (skip Taux column = index 2)
-    const months = ['1/2026','2/2026','3/2026','4/2026','5/2026','6/2026','7/2026','8/2026','9/2026','10/2026','11/2026','12/2026'];
-    const designers = [];
+    // Debug: return raw data so we can verify mapping
+    if (req.query.debug === '1') {
+      return res.status(200).json({ raw: rows.slice(0, 5) });
+    }
 
-    rows.forEach(function(row) {
-      if (!row[0] && !row[1]) return; // skip empty
-      const lot = (row[0] || '').trim();
-      const name = (row[1] || '').trim();
-      if (!name || name === 'PROD Mois') return; // skip aggregate rows
+    // Row 0 = sub-headers with "XX jours ouvrés"
+    // Row 1 = main headers: LOT | Ressource | Taux remisé | 1/2026 | 2/2026 | ...
+    const headerRow = rows[1] || [];
+    // Find month columns: detect columns containing /2026
+    const monthCols = [];
+    const months = [];
+    headerRow.forEach(function(cell, idx) {
+      const s = String(cell || '').trim();
+      if (/^\d{1,2}\/\d{4}$/.test(s)) {
+        monthCols.push(idx);
+        months.push(s);
+      }
+    });
+
+    // Find LOT and Ressource columns
+    let lotCol = -1, nameCol = -1;
+    headerRow.forEach(function(cell, idx) {
+      const s = String(cell || '').toLowerCase().trim();
+      if (s === 'lot') lotCol = idx;
+      if (s === 'ressource') nameCol = idx;
+    });
+
+    const designers = [];
+    // Data rows start at index 2 (row 5 in sheet)
+    for (let r = 2; r < rows.length; r++) {
+      const row = rows[r];
+      if (!row) continue;
+      const lot = lotCol >= 0 ? String(row[lotCol] || '').trim() : '';
+      const name = nameCol >= 0 ? String(row[nameCol] || '').trim() : '';
+      if (!name || /PROD|BUDGET|Consommé|Delta/i.test(name) || /PROD|BUDGET|Consommé|Delta/i.test(lot)) continue;
 
       const availability = {};
-      months.forEach(function(m, i) {
-        const val = row[i + 3]; // columns D onwards (index 3+)
-        availability[m] = val ? parseFloat(String(val).replace(',', '.')) : 0;
+      monthCols.forEach(function(colIdx, mi) {
+        const val = row[colIdx];
+        availability[months[mi]] = typeof val === 'number' ? val : (val ? parseFloat(String(val).replace(',', '.')) : 0);
       });
 
       designers.push({ lot: lot, name: name, availability: availability });
-    });
+    }
 
     res.setHeader('Cache-Control', 's-maxage=600, stale-while-revalidate');
     return res.status(200).json({ months: months, designers: designers });
