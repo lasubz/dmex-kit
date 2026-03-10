@@ -149,6 +149,14 @@
   .kpi-quality-good { color: var(--green); }
   .kpi-quality-warn { color: var(--yellow); }
   .kpi-quality-bad { color: var(--red); }
+  .kpi-stat-item {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 11px; font-weight: 600; color: var(--s600);
+    margin-right: 6px; white-space: nowrap;
+  }
+  .kpi-stat-dot {
+    width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
+  }
 
   /* ─── TOOLBAR ────────────────────────────── */
   .toolbar {
@@ -221,33 +229,38 @@
 
   /* ─── TASK ROWS ──────────────────────────── */
   .task-row {
-    display: grid;
-    grid-template-columns: 72px 1fr 140px 140px 80px 90px;
-    align-items: center; gap: 12px;
-    padding: 12px 20px;
+    display: flex; flex-direction: column; gap: 6px;
+    padding: 10px 20px;
     border-bottom: 1px solid var(--s100);
-    font-size: 13px;
     transition: background 0.1s;
   }
   .task-row:last-child { border-bottom: none; }
   .task-row:hover { background: var(--s50); }
 
+  .task-main {
+    display: flex; align-items: center; gap: 10px;
+    min-width: 0;
+  }
+
   .task-key {
     font-family: 'JetBrains Mono', monospace;
     font-size: 11px; font-weight: 500; color: var(--blue);
-    text-decoration: none;
+    text-decoration: none; flex-shrink: 0;
   }
   .task-key:hover { text-decoration: underline; }
-  .task-key.no-link { color: var(--s400); cursor: default; }
-  .task-key.no-link:hover { text-decoration: none; }
 
   .task-summary {
     font-size: 13px; font-weight: 500; color: var(--s900);
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
 
+  .task-meta {
+    display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+    padding-left: 0;
+  }
+
   .status-badge {
-    font-size: 10px; font-weight: 700; padding: 3px 8px;
+    font-size: 10px; font-weight: 700; padding: 2px 7px;
     border-radius: 4px; letter-spacing: 0.02em;
     white-space: nowrap; display: inline-block;
   }
@@ -259,32 +272,17 @@
   .status-done      { background: rgba(66,180,42,0.12); color: #2E8020; }
   .status-cancelled { background: rgba(227,0,15,0.10); color: #A8000B; }
 
-  .assignee {
-    display: flex; align-items: center; gap: 8px;
-    font-size: 12px; color: var(--s600);
+  .task-chip {
+    font-size: 10px; font-weight: 500; padding: 2px 8px;
+    border-radius: 4px; white-space: nowrap;
+    background: var(--s50); color: var(--s600); border: 1px solid var(--s100);
   }
-  .avatar {
-    width: 24px; height: 24px; border-radius: 50%;
-    background: var(--navy); color: var(--white);
-    font-size: 9px; font-weight: 700;
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
-  }
-  .assignee-name {
-    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-  }
-
-  .task-estimate {
+  .estimate-chip {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 11px; color: var(--s400);
+    color: var(--s400);
   }
-
-  .task-deadline {
-    font-size: 11px; color: var(--s400);
-  }
-  .task-deadline.urgent {
-    color: var(--red); font-weight: 600;
-  }
+  .deadline-chip { color: var(--s400); }
+  .deadline-chip.urgent { color: var(--red); background: rgba(227,0,15,0.06); border-color: rgba(227,0,15,0.15); font-weight: 600; }
 
   /* ─── TIMELINE ───────────────────────────── */
   .timeline-placeholder {
@@ -378,13 +376,6 @@
   /* ─── RESPONSIVE ─────────────────────────── */
   @media (max-width: 900px) {
     .kpis { grid-template-columns: repeat(2, 1fr); }
-    .task-row {
-      grid-template-columns: 60px 1fr 110px;
-      gap: 8px;
-    }
-    .task-row .assignee,
-    .task-row .task-estimate,
-    .task-row .task-deadline { display: none; }
   }
   @media (max-width: 640px) {
     .kpis { grid-template-columns: 1fr; }
@@ -692,15 +683,15 @@
       statusCounts[s] = (statusCounts[s]||0) + 1;
     });
     var barHtml = '';
-    var labelParts = [];
+    var listHtml = '';
     Object.keys(statusCounts).forEach(function(s){
       var pct = (statusCounts[s] / active.length * 100);
       var color = statusColors[s] || '#D8DBE8';
       barHtml += '<span style="width:'+pct+'%;background:'+color+';"></span>';
-      labelParts.push(statusCounts[s] + ' ' + s);
+      listHtml += '<span class="kpi-stat-item"><span class="kpi-stat-dot" style="background:'+color+'"></span>' + statusCounts[s] + ' ' + s + '</span>';
     });
     document.getElementById('kpi-bar').innerHTML = barHtml;
-    document.getElementById('kpi-statuts').textContent = labelParts.join(' · ');
+    document.getElementById('kpi-statuts').innerHTML = listHtml;
 
     // Data quality
     var withDeadline = active.filter(function(i){ return i.fields.duedate; }).length;
@@ -766,11 +757,10 @@
   function renderTask(issue) {
     var f = issue.fields;
     var key = issue.key;
-    var link = f.customfield_12448;
+    var jiraUrl = 'https://useradgents.atlassian.net/browse/' + key;
     var statusName = f.status ? f.status.name : '';
     var statusClass = getStatusClass(statusName);
-    var assigneeName = f.assignee ? f.assignee.displayName : '—';
-    var initials = assigneeName !== '—' ? assigneeName.split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase() : '?';
+    var assigneeName = f.assignee ? f.assignee.displayName : '';
     var estimate = '';
     if (f.timetracking && f.timetracking.originalEstimate) {
       estimate = f.timetracking.originalEstimate;
@@ -789,16 +779,16 @@
     }
 
     var h = '<div class="task-row">';
-    if (link) {
-      h += '<a href="'+esc(link)+'" class="task-key" target="_blank" rel="noopener">'+esc(key)+'</a>';
-    } else {
-      h += '<span class="task-key no-link">'+esc(key)+'</span>';
-    }
+    h += '<div class="task-main">';
+    h += '<a href="'+esc(jiraUrl)+'" class="task-key" target="_blank" rel="noopener">'+esc(key)+'</a>';
     h += '<span class="task-summary" title="'+esc(f.summary||'')+'">'+esc(f.summary||'')+'</span>';
-    h += '<span><span class="status-badge '+statusClass+'">'+esc(statusName)+'</span></span>';
-    h += '<span class="assignee"><span class="avatar">'+esc(initials)+'</span><span class="assignee-name">'+esc(assigneeName)+'</span></span>';
-    h += '<span class="task-estimate">'+esc(estimate)+'</span>';
-    h += '<span class="task-deadline'+deadlineClass+'">'+esc(deadline)+'</span>';
+    h += '</div>';
+    h += '<div class="task-meta">';
+    h += '<span class="status-badge '+statusClass+'">'+esc(statusName)+'</span>';
+    if (assigneeName) h += '<span class="task-chip assignee-chip">'+esc(assigneeName)+'</span>';
+    if (estimate) h += '<span class="task-chip estimate-chip">'+esc(estimate)+'</span>';
+    if (deadline) h += '<span class="task-chip deadline-chip'+deadlineClass+'">'+esc(deadline)+'</span>';
+    h += '</div>';
     h += '</div>';
     return h;
   }
