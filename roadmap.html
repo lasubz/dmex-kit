@@ -249,6 +249,23 @@
     line-height: 1;
   }
 
+  .parent-header {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 20px;
+    border-bottom: 1px solid var(--s100);
+    background: rgba(0,104,255,0.03);
+  }
+  .parent-link {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; font-weight: 600; color: var(--navy);
+    text-decoration: none; flex-shrink: 0;
+  }
+  .parent-link:hover { text-decoration: underline; color: var(--blue); }
+  .parent-summary {
+    font-size: 12px; font-weight: 600; color: var(--navy);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+
   .task-key {
     font-family: 'JetBrains Mono', monospace;
     font-size: 11px; font-weight: 500; color: var(--blue);
@@ -762,7 +779,15 @@
       // Build parent→children tree
       var tree = buildTree(items);
       tree.forEach(function(node){
-        html += renderTask(node.issue, false);
+        // If this is a virtual parent (not in filtered list), show header
+        if (node.virtual) {
+          html += '<div class="parent-header">';
+          html += '<a href="https://useradgents.atlassian.net/browse/'+esc(node.key)+'" class="parent-link" target="_blank" rel="noopener">'+esc(node.key)+'</a>';
+          html += '<span class="parent-summary">'+esc(node.summary)+'</span>';
+          html += '</div>';
+        } else {
+          html += renderTask(node.issue, false);
+        }
         if (node.children.length) {
           node.children.forEach(function(child){
             html += renderTask(child, true);
@@ -777,25 +802,43 @@
   }
 
   function buildTree(items) {
-    // Index all items by key
     var byKey = {};
     items.forEach(function(i){ byKey[i.key] = i; });
-    // Identify children (those whose parent is also in the list)
-    var childKeys = {};
+    // Map each child to its parent key
+    var childOf = {};
     items.forEach(function(i){
       var p = i.fields.parent;
-      if (p && byKey[p.key]) childKeys[i.key] = p.key;
+      if (p) childOf[i.key] = p.key;
     });
-    // Build ordered list: parents/standalone first, children nested
-    var result = [];
+    // Group children by parent key
+    var parentGroups = {};
     items.forEach(function(i){
-      if (childKeys[i.key]) return; // skip children, they'll be added under parent
-      var node = { issue: i, children: [] };
-      // Find children of this item in the list
-      items.forEach(function(c){
-        if (childKeys[c.key] === i.key) node.children.push(c);
-      });
+      var pk = childOf[i.key];
+      if (pk) {
+        if (!parentGroups[pk]) parentGroups[pk] = [];
+        parentGroups[pk].push(i);
+      }
+    });
+    // Build result: standalone/parent items first, then virtual parents for out-of-list parents
+    var result = [];
+    var handled = {};
+    items.forEach(function(i){
+      if (childOf[i.key]) return; // skip children
+      var node = { issue: i, children: parentGroups[i.key] || [], virtual: false };
       result.push(node);
+      handled[i.key] = true;
+    });
+    // Add virtual parent nodes for children whose parent is NOT in the list
+    Object.keys(parentGroups).forEach(function(pk){
+      if (handled[pk]) return; // parent already in list
+      var firstChild = parentGroups[pk][0];
+      var parentData = firstChild.fields.parent;
+      result.push({
+        virtual: true,
+        key: pk,
+        summary: parentData && parentData.fields ? parentData.fields.summary : pk,
+        children: parentGroups[pk]
+      });
     });
     return result;
   }
