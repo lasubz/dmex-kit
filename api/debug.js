@@ -8,7 +8,23 @@ export default async function handler(req, res) {
   const auth = Buffer.from(`${JIRA_EMAIL}:${JIRA_API_TOKEN}`).toString('base64');
 
   try {
-    // List projects accessible to this token
+    // Check auth by getting current user
+    const meResponse = await fetch('https://useradgents.atlassian.net/rest/api/3/myself', {
+      headers: {
+        'Authorization': `Basic ${auth}`,
+        'Accept': 'application/json'
+      }
+    });
+    const meStatus = meResponse.status;
+    let me = null;
+    if (meResponse.ok) {
+      const meData = await meResponse.json();
+      me = { displayName: meData.displayName, email: meData.emailAddress, active: meData.active };
+    } else {
+      me = { error: await meResponse.text() };
+    }
+
+    // List projects
     const response = await fetch('https://useradgents.atlassian.net/rest/api/3/project/search', {
       method: 'GET',
       headers: {
@@ -17,14 +33,13 @@ export default async function handler(req, res) {
       }
     });
 
-    if (!response.ok) {
-      const text = await response.text();
-      return res.status(response.status).json({ error: text });
+    let projects = [];
+    if (response.ok) {
+      const data = await response.json();
+      projects = (data.values || []).map(p => ({ key: p.key, name: p.name, id: p.id }));
     }
 
-    const data = await response.json();
-    const projects = (data.values || []).map(p => ({ key: p.key, name: p.name, id: p.id }));
-    return res.status(200).json({ totalProjects: projects.length, projects });
+    return res.status(200).json({ authStatus: meStatus, user: me, totalProjects: projects.length, projects });
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }
