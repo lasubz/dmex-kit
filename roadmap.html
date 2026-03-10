@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DMEX · Vue Roadmap</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy:   #001A70;
+    --blue:   #0068FF;
+    --orange: #FE5716;
+    --white:  #FFFFFF;
+    --s50:    #F6F7FB;
+    --s100:   #ECEEF5;
+    --s200:   #D8DBE8;
+    --s400:   #8B90A8;
+    --s600:   #4A5068;
+    --s900:   #0D1117;
+    --green:  #42B42A;
+    --red:    #E3000F;
+    --yellow: #F5A623;
+  }
+
+  *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Outfit', sans-serif;
+    background: var(--s50);
+    color: var(--s900);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ─── NAV ─────────────────────────────────── */
+  .nav {
+    background: rgba(255,255,255,0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--s200);
+    height: 58px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 40px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .nav-left { display: flex; align-items: center; gap: 16px; }
+  .nav-sep { color: var(--s200); font-size: 18px; font-weight: 300; }
+
+  .nav-back {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 12px; font-weight: 500; color: var(--s400);
+    text-decoration: none; transition: color 0.15s;
+  }
+  .nav-back:hover { color: var(--navy); }
+  .nav-current { font-size: 12px; font-weight: 600; color: var(--navy); }
+
+  .nav-badge {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 11px; font-weight: 500; color: var(--s400);
+  }
+  .nav-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--orange);
+    animation: pulse 2.5s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.75); }
+  }
+
+  /* ─── HERO ────────────────────────────────── */
+  .hero {
+    background: var(--navy);
+    padding: 56px 40px 52px;
+    position: relative; overflow: hidden;
+  }
+  .hero::before {
+    content: ''; position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse 55% 90% at 105% 45%, rgba(0,104,255,0.28) 0%, transparent 65%),
+      radial-gradient(ellipse 30% 50% at -5% 80%, rgba(254,87,22,0.10) 0%, transparent 60%);
+  }
+  .hero-inner { max-width: 1100px; margin: 0 auto; position: relative; }
+  .hero-pill {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.13);
+    padding: 5px 14px 5px 8px; border-radius: 100px; margin-bottom: 22px;
+  }
+  .hero-pill-badge {
+    background: var(--orange); color: var(--navy);
+    font-size: 9px; font-weight: 700; padding: 2px 7px;
+    border-radius: 100px; letter-spacing: 0.06em; text-transform: uppercase;
+  }
+  .hero-pill span { font-size: 11px; color: rgba(255,255,255,0.55); font-weight: 500; }
+  .hero h1 {
+    font-size: 40px; font-weight: 800; color: var(--white);
+    line-height: 1.05; letter-spacing: -0.025em; margin-bottom: 14px;
+  }
+  .hero h1 em {
+    font-style: normal;
+    background: linear-gradient(135deg, #FF7043, var(--orange));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  }
+  .hero-sub {
+    font-size: 15px; color: rgba(255,255,255,0.72);
+    max-width: 480px; line-height: 1.65; font-weight: 400;
+  }
+
+  /* ─── MAIN ────────────────────────────────── */
+  .main {
+    max-width: 1100px; margin: 0 auto;
+    padding: 32px 40px 64px;
+    display: flex; flex-direction: column; gap: 20px;
+    width: 100%;
+  }
+
+  /* ─── KPI CARDS ──────────────────────────── */
+  .kpis {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
+  }
+  .kpi {
+    background: var(--white); border: 1px solid var(--s200);
+    border-radius: 12px; padding: 18px 20px;
+  }
+  .kpi-label {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--s400); margin-bottom: 6px;
+  }
+  .kpi-value {
+    font-size: 28px; font-weight: 800; color: var(--navy);
+    letter-spacing: -0.02em; line-height: 1;
+  }
+  .kpi-sub {
+    font-size: 11px; color: var(--s400); margin-top: 6px; line-height: 1.4;
+  }
+  .kpi-bar {
+    display: flex; height: 6px; border-radius: 3px; overflow: hidden;
+    margin-top: 10px; gap: 1px;
+  }
+  .kpi-bar span { height: 100%; border-radius: 2px; }
+  .kpi-quality-good { color: var(--green); }
+  .kpi-quality-warn { color: var(--yellow); }
+  .kpi-quality-bad { color: var(--red); }
+
+  /* ─── TOOLBAR ────────────────────────────── */
+  .toolbar {
+    background: var(--white); border: 1px solid var(--s200);
+    border-radius: 12px; padding: 16px 20px;
+    display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+  }
+  .toolbar-section {
+    display: flex; align-items: center; gap: 8px;
+  }
+  .toolbar-label {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--s400); white-space: nowrap;
+  }
+  .pill {
+    font-size: 11px; font-weight: 600; padding: 5px 12px;
+    border-radius: 100px; border: 1px solid var(--s200);
+    background: var(--white); color: var(--s600);
+    cursor: pointer; transition: all 0.15s; white-space: nowrap;
+  }
+  .pill:hover { border-color: var(--blue); color: var(--blue); }
+  .pill.active { background: var(--navy); color: var(--white); border-color: var(--navy); }
+  .pill-group { display: flex; gap: 4px; flex-wrap: wrap; }
+
+  .toolbar-sep {
+    width: 1px; height: 24px; background: var(--s200); flex-shrink: 0;
+  }
+
+  .view-toggle { display: flex; gap: 2px; background: var(--s100); border-radius: 8px; padding: 2px; }
+  .view-btn {
+    font-size: 11px; font-weight: 600; padding: 6px 14px;
+    border-radius: 6px; border: none; background: transparent;
+    color: var(--s600); cursor: pointer; transition: all 0.15s;
+    font-family: 'Outfit', sans-serif;
+  }
+  .view-btn.active { background: var(--white); color: var(--navy); box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+
+  .refresh-btn {
+    margin-left: auto; font-size: 11px; font-weight: 600;
+    padding: 6px 14px; border-radius: 8px; border: 1px solid var(--s200);
+    background: var(--white); color: var(--s600); cursor: pointer;
+    font-family: 'Outfit', sans-serif; transition: all 0.15s;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .refresh-btn:hover { border-color: var(--blue); color: var(--blue); }
+  .refresh-btn.loading { opacity: 0.5; pointer-events: none; }
+  .cache-info { font-size: 10px; color: var(--s400); }
+
+  /* ─── GROUPS ─────────────────────────────── */
+  .group {
+    background: var(--white); border: 1px solid var(--s200);
+    border-radius: 14px; overflow: hidden;
+  }
+  .group-head {
+    padding: 16px 20px; border-bottom: 1px solid var(--s100);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .group-title {
+    font-size: 14px; font-weight: 700; color: var(--navy);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .group-count {
+    font-size: 10px; font-weight: 700; background: var(--s100);
+    color: var(--s600); padding: 2px 8px; border-radius: 100px;
+  }
+  .group-meta {
+    font-size: 11px; color: var(--s400); font-weight: 500;
+    display: flex; gap: 16px;
+  }
+
+  /* ─── TASK ROWS ──────────────────────────── */
+  .task-row {
+    display: grid;
+    grid-template-columns: 72px 1fr 140px 140px 80px 90px;
+    align-items: center; gap: 12px;
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--s100);
+    font-size: 13px;
+    transition: background 0.1s;
+  }
+  .task-row:last-child { border-bottom: none; }
+  .task-row:hover { background: var(--s50); }
+
+  .task-key {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; font-weight: 500; color: var(--blue);
+    text-decoration: none;
+  }
+  .task-key:hover { text-decoration: underline; }
+  .task-key.no-link { color: var(--s400); cursor: default; }
+  .task-key.no-link:hover { text-decoration: none; }
+
+  .task-summary {
+    font-size: 13px; font-weight: 500; color: var(--s900);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+
+  .status-badge {
+    font-size: 10px; font-weight: 700; padding: 3px 8px;
+    border-radius: 4px; letter-spacing: 0.02em;
+    white-space: nowrap; display: inline-block;
+  }
+  .status-todo      { background: rgba(139,144,168,0.12); color: #5A5F78; }
+  .status-cadrage   { background: rgba(245,166,35,0.12); color: #B07A14; }
+  .status-ux        { background: rgba(245,166,35,0.15); color: #9A6A0A; }
+  .status-ui        { background: rgba(0,104,255,0.12); color: #004FBB; }
+  .status-validation{ background: rgba(156,39,176,0.12); color: #7B1FA2; }
+  .status-done      { background: rgba(66,180,42,0.12); color: #2E8020; }
+  .status-cancelled { background: rgba(227,0,15,0.10); color: #A8000B; }
+
+  .assignee {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 12px; color: var(--s600);
+  }
+  .avatar {
+    width: 24px; height: 24px; border-radius: 50%;
+    background: var(--navy); color: var(--white);
+    font-size: 9px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .assignee-name {
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+
+  .task-estimate {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; color: var(--s400);
+  }
+
+  .task-deadline {
+    font-size: 11px; color: var(--s400);
+  }
+  .task-deadline.urgent {
+    color: var(--red); font-weight: 600;
+  }
+
+  /* ─── TIMELINE ───────────────────────────── */
+  .timeline-placeholder {
+    background: var(--white); border: 1px solid var(--s200);
+    border-radius: 14px; padding: 40px; text-align: center;
+  }
+  .timeline-placeholder p {
+    font-size: 14px; color: var(--s600); line-height: 1.6;
+  }
+  .timeline-wrap {
+    background: var(--white); border: 1px solid var(--s200);
+    border-radius: 14px; overflow: hidden;
+  }
+  .timeline-header {
+    display: flex; border-bottom: 1px solid var(--s100);
+    padding: 0 20px;
+  }
+  .timeline-col-label {
+    width: 240px; flex-shrink: 0; padding: 10px 0;
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.1em; color: var(--s400);
+  }
+  .timeline-dates {
+    flex: 1; display: flex; overflow-x: auto;
+  }
+  .timeline-date {
+    flex: 1; min-width: 40px; text-align: center;
+    font-size: 9px; font-weight: 600; color: var(--s400); padding: 10px 0;
+    border-left: 1px solid var(--s100);
+  }
+  .timeline-date.today { color: var(--orange); font-weight: 700; }
+  .timeline-row {
+    display: flex; border-bottom: 1px solid var(--s100);
+    padding: 0 20px; min-height: 36px; align-items: center;
+  }
+  .timeline-row:last-child { border-bottom: none; }
+  .timeline-row-label {
+    width: 240px; flex-shrink: 0;
+    font-size: 12px; color: var(--s900); font-weight: 500;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    padding-right: 12px;
+  }
+  .timeline-bars {
+    flex: 1; position: relative; height: 24px;
+  }
+  .timeline-bar {
+    position: absolute; height: 8px; top: 8px;
+    border-radius: 4px; min-width: 6px;
+  }
+  .timeline-dot {
+    position: absolute; width: 8px; height: 8px; top: 8px;
+    border-radius: 50%;
+  }
+
+  /* ─── LOADING / ERROR ────────────────────── */
+  .loading-state, .error-state {
+    background: var(--white); border: 1px solid var(--s200);
+    border-radius: 14px; padding: 60px 40px; text-align: center;
+  }
+  .loading-state p, .error-state p {
+    font-size: 14px; color: var(--s600); line-height: 1.6;
+  }
+  .error-state p { color: var(--red); }
+  .spinner {
+    width: 32px; height: 32px; border: 3px solid var(--s200);
+    border-top-color: var(--blue); border-radius: 50%;
+    animation: spin 0.8s linear infinite; margin: 0 auto 16px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ─── FOOTER ─────────────────────────────── */
+  .footer {
+    border-top: 1px solid var(--s200); padding: 16px 40px;
+    background: var(--white); margin-top: auto;
+  }
+  .footer-inner {
+    max-width: 1100px; margin: 0 auto;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .footer span { font-size: 11px; color: var(--s400); }
+  .footer-right { font-family: 'JetBrains Mono', monospace; font-size: 10px; }
+
+  /* ─── ANIMATIONS ─────────────────────────── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .hero h1  { animation: fadeUp 0.45s 0.05s ease both; }
+  .hero-sub { animation: fadeUp 0.45s 0.12s ease both; }
+
+  /* ─── RESPONSIVE ─────────────────────────── */
+  @media (max-width: 900px) {
+    .kpis { grid-template-columns: repeat(2, 1fr); }
+    .task-row {
+      grid-template-columns: 60px 1fr 110px;
+      gap: 8px;
+    }
+    .task-row .assignee,
+    .task-row .task-estimate,
+    .task-row .task-deadline { display: none; }
+  }
+  @media (max-width: 640px) {
+    .kpis { grid-template-columns: 1fr; }
+    .nav, .hero, .main, .footer { padding-left: 20px; padding-right: 20px; }
+    .hero h1 { font-size: 28px; }
+    .toolbar { flex-direction: column; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<!-- PASSWORD GATE -->
+<div id="pw-gate" style="display:none;position:fixed;inset:0;z-index:99999;background:#001A70;display:flex;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:16px;padding:48px 40px;max-width:380px;width:90%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.3);">
+    <div style="font-size:32px;margin-bottom:8px;">🔒</div>
+    <h2 style="font-family:'Outfit',sans-serif;font-size:20px;color:#001A70;margin:0 0 4px;">Accès protégé</h2>
+    <p style="font-family:'Outfit',sans-serif;font-size:13px;color:#64748b;margin:0 0 24px;">Kit DMEX — Usage interne</p>
+    <input id="pw-input" type="password" placeholder="Mot de passe" style="width:100%;padding:12px 16px;border:2px solid #e2e8f0;border-radius:10px;font-family:'Outfit',sans-serif;font-size:15px;outline:none;transition:border .2s;" onfocus="this.style.borderColor='#0068FF'" onblur="this.style.borderColor='#e2e8f0'">
+    <p id="pw-error" style="font-family:'Outfit',sans-serif;font-size:12px;color:#ef4444;margin:8px 0 0;display:none;">Mot de passe incorrect</p>
+    <button id="pw-btn" style="margin-top:16px;width:100%;padding:12px;background:#FF5C00;color:#fff;border:none;border-radius:10px;font-family:'Outfit',sans-serif;font-size:15px;font-weight:600;cursor:pointer;">Accéder</button>
+  </div>
+</div>
+<script>
+(function(){
+  var KEY='dmex_auth',HASH='ca7193bc343e5c71cddf019480ccc0fb1fc70307ad4922b31cfbc4ef257e4237';
+  async function sha256(s){var b=new TextEncoder().encode(s);var h=await crypto.subtle.digest('SHA-256',b);return Array.from(new Uint8Array(h)).map(function(x){return x.toString(16).padStart(2,'0')}).join('');}
+  if(localStorage.getItem(KEY)==='1'){document.getElementById('pw-gate').style.display='none';}
+  else{document.getElementById('pw-gate').style.display='flex';document.body.style.overflow='hidden';}
+  document.getElementById('pw-btn').onclick=async function(){
+    var v=document.getElementById('pw-input').value;
+    if(await sha256(v)===HASH){localStorage.setItem(KEY,'1');document.getElementById('pw-gate').style.display='none';document.body.style.overflow='';}
+    else{document.getElementById('pw-error').style.display='block';document.getElementById('pw-input').style.borderColor='#ef4444';}
+  };
+  document.getElementById('pw-input').onkeydown=function(e){if(e.key==='Enter')document.getElementById('pw-btn').click();};
+})();
+</script>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-left">
+    <img src="data:image/png;base64,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" height="26" alt="EDF">
+    <span class="nav-sep">/</span>
+    <a href="./dmex-hub.html" class="nav-back">← Kit de collaboration</a>
+    <span class="nav-sep">/</span>
+    <span class="nav-current">Vue Roadmap</span>
+  </div>
+  <div class="nav-badge">
+    <span class="nav-dot"></span>
+    Usage interne · DMEX
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-pill">
+      <span class="hero-pill-badge">Jira</span>
+      <span>Données synchronisées en temps réel</span>
+    </div>
+    <h1>Vue <em>roadmap</em></h1>
+    <p class="hero-sub">Suivez l'activité de l'équipe design EDF — par stream, par designer, par statut. Données Jira en lecture seule.</p>
+  </div>
+</div>
+
+<!-- MAIN -->
+<main class="main">
+
+  <!-- KPIs -->
+  <div class="kpis" id="kpis">
+    <div class="kpi">
+      <div class="kpi-label">Tâches actives</div>
+      <div class="kpi-value" id="kpi-active">—</div>
+      <div class="kpi-sub" id="kpi-active-sub">Chargement…</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Charge estimée</div>
+      <div class="kpi-value" id="kpi-charge">—</div>
+      <div class="kpi-sub" id="kpi-charge-sub">jours</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Répartition statuts</div>
+      <div class="kpi-value" id="kpi-statuts" style="font-size:14px;font-weight:600;">—</div>
+      <div class="kpi-bar" id="kpi-bar"></div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Qualité des données</div>
+      <div class="kpi-value" id="kpi-quality" style="font-size:16px;font-weight:700;">—</div>
+      <div class="kpi-sub" id="kpi-quality-sub"></div>
+    </div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <div class="toolbar-section">
+      <span class="toolbar-label">Vue</span>
+      <div class="view-toggle">
+        <button class="view-btn active" data-view="stream">Par stream</button>
+        <button class="view-btn" data-view="designer">Par designer</button>
+        <button class="view-btn" data-view="timeline">Timeline</button>
+      </div>
+    </div>
+    <div class="toolbar-sep"></div>
+    <div class="toolbar-section">
+      <span class="toolbar-label">Stream</span>
+      <div class="pill-group" id="stream-filters"></div>
+    </div>
+    <div class="toolbar-sep"></div>
+    <div class="toolbar-section">
+      <span class="toolbar-label">Statut</span>
+      <div class="pill-group" id="status-filters"></div>
+    </div>
+    <button class="refresh-btn" id="refresh-btn" onclick="loadData(true)">
+      ↻ Rafraîchir
+    </button>
+    <span class="cache-info" id="cache-info"></span>
+  </div>
+
+  <!-- Content area -->
+  <div id="content">
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>Chargement des données Jira…</p>
+    </div>
+  </div>
+
+</main>
+
+<!-- FOOTER -->
+<div class="footer">
+  <div class="footer-inner">
+    <span>UserAdgents × EDF — Programme DMEX · Usage interne</span>
+    <span class="footer-right">Mars 2026</span>
+  </div>
+</div>
+
+<script>
+(function(){
+  // ─── CONFIG ───────────────────────────────
+  var CACHE_KEY = 'dmex_jira_cache';
+  var CACHE_TTL = 15 * 60 * 1000; // 15 min
+  var KNOWN_STREAMS = ['APP','WEB','HRZ','PILOTAGE','SUIVI-CONSO','SOUSCRIPTION'];
+  var KNOWN_STATUSES = ['À faire','CADRAGE','EN COURS UX','EN COURS UI','EN VALIDATION','TERMINÉ','ANNULÉ'];
+  var DEFAULT_HIDDEN = ['TERMINÉ','ANNULÉ'];
+  var SECONDS_PER_DAY = 25200;
+
+  // ─── STATE ────────────────────────────────
+  var allIssues = [];
+  var activeStreams = KNOWN_STREAMS.slice();
+  var activeStatuses = KNOWN_STATUSES.filter(function(s){ return DEFAULT_HIDDEN.indexOf(s)===-1; });
+  var currentView = 'stream';
+
+  // ─── INIT ─────────────────────────────────
+  window.loadData = loadData;
+  initFilters();
+  initViewToggle();
+  loadData(false);
+
+  // ─── DATA LOADING ─────────────────────────
+  function loadData(force) {
+    var cached = getCached();
+    if (!force && cached) {
+      allIssues = cached.issues;
+      updateCacheInfo(cached.timestamp);
+      render();
+      return;
+    }
+    document.getElementById('refresh-btn').classList.add('loading');
+    document.getElementById('content').innerHTML = '<div class="loading-state"><div class="spinner"></div><p>Chargement des données Jira…</p></div>';
+    fetchAllPages([]).then(function(issues){
+      allIssues = issues;
+      setCache(issues);
+      updateCacheInfo(Date.now());
+      document.getElementById('refresh-btn').classList.remove('loading');
+      render();
+    }).catch(function(err){
+      document.getElementById('refresh-btn').classList.remove('loading');
+      var cached2 = getCached();
+      if (cached2) {
+        allIssues = cached2.issues;
+        updateCacheInfo(cached2.timestamp);
+        render();
+        return;
+      }
+      document.getElementById('content').innerHTML = '<div class="error-state"><p>Données indisponibles — vérifiez la connexion API Jira.</p></div>';
+    });
+  }
+
+  function fetchAllPages(acc, startAt) {
+    startAt = startAt || 0;
+    return fetch('/api/jira?startAt=' + startAt)
+      .then(function(r){ if(!r.ok) throw new Error(r.status); return r.json(); })
+      .then(function(data){
+        var issues = acc.concat(data.issues || []);
+        if (data.startAt + data.maxResults < data.total) {
+          return fetchAllPages(issues, startAt + data.maxResults);
+        }
+        return issues;
+      });
+  }
+
+  // ─── CACHE ────────────────────────────────
+  function getCached() {
+    try {
+      var raw = localStorage.getItem(CACHE_KEY);
+      if (!raw) return null;
+      var d = JSON.parse(raw);
+      if (Date.now() - d.timestamp > CACHE_TTL) return null;
+      return d;
+    } catch(e) { return null; }
+  }
+  function setCache(issues) {
+    try { localStorage.setItem(CACHE_KEY, JSON.stringify({issues:issues, timestamp:Date.now()})); } catch(e){}
+  }
+  function updateCacheInfo(ts) {
+    var d = new Date(ts);
+    document.getElementById('cache-info').textContent = 'Màj : ' + d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+  }
+
+  // ─── FILTERS ──────────────────────────────
+  function initFilters() {
+    var sf = document.getElementById('stream-filters');
+    KNOWN_STREAMS.forEach(function(s){
+      var p = document.createElement('button');
+      p.className = 'pill active'; p.textContent = s; p.dataset.stream = s;
+      p.onclick = function(){ toggleFilter('stream', s, p); };
+      sf.appendChild(p);
+    });
+    var stf = document.getElementById('status-filters');
+    KNOWN_STATUSES.forEach(function(s){
+      var p = document.createElement('button');
+      p.className = 'pill' + (DEFAULT_HIDDEN.indexOf(s)===-1 ? ' active' : '');
+      p.textContent = s; p.dataset.status = s;
+      p.onclick = function(){ toggleFilter('status', s, p); };
+      stf.appendChild(p);
+    });
+  }
+  function toggleFilter(type, val, el) {
+    var arr = type === 'stream' ? activeStreams : activeStatuses;
+    var idx = arr.indexOf(val);
+    if (idx > -1) { arr.splice(idx,1); el.classList.remove('active'); }
+    else { arr.push(val); el.classList.add('active'); }
+    render();
+  }
+
+  function initViewToggle() {
+    document.querySelectorAll('.view-btn').forEach(function(btn){
+      btn.onclick = function(){
+        document.querySelectorAll('.view-btn').forEach(function(b){ b.classList.remove('active'); });
+        btn.classList.add('active');
+        currentView = btn.dataset.view;
+        render();
+      };
+    });
+  }
+
+  // ─── FILTERING ────────────────────────────
+  function getFiltered() {
+    return allIssues.filter(function(issue){
+      var f = issue.fields;
+      var status = f.status ? f.status.name : '';
+      if (activeStatuses.indexOf(status) === -1) return false;
+      var labels = f.labels || [];
+      if (labels.length === 0) return activeStreams.length > 0;
+      return labels.some(function(l){ return activeStreams.indexOf(l) > -1; });
+    });
+  }
+  function getActive() {
+    return allIssues.filter(function(i){
+      var cat = i.fields.status && i.fields.status.statusCategory ? i.fields.status.statusCategory.name : '';
+      return cat !== 'Terminé' && i.fields.status.name !== 'ANNULÉ';
+    });
+  }
+
+  // ─── RENDER ───────────────────────────────
+  function render() {
+    renderKPIs();
+    if (currentView === 'stream') renderGrouped('stream');
+    else if (currentView === 'designer') renderGrouped('designer');
+    else renderTimeline();
+  }
+
+  function renderKPIs() {
+    var active = getActive();
+    document.getElementById('kpi-active').textContent = active.length;
+    document.getElementById('kpi-active-sub').textContent = 'sur ' + allIssues.length + ' total';
+
+    var charge = 0;
+    active.forEach(function(i){
+      if (i.fields.timeoriginalestimate) charge += i.fields.timeoriginalestimate;
+    });
+    var days = Math.round(charge / SECONDS_PER_DAY * 10) / 10;
+    document.getElementById('kpi-charge').textContent = days + 'j';
+    var withEst = active.filter(function(i){ return i.fields.timeoriginalestimate; }).length;
+    document.getElementById('kpi-charge-sub').textContent = withEst + '/' + active.length + ' tâches estimées';
+
+    // Status distribution
+    var statusCounts = {};
+    var statusColors = {
+      'À faire':'#8B90A8','CADRAGE':'#F5A623','EN COURS UX':'#E8A317',
+      'EN COURS UI':'#0068FF','EN VALIDATION':'#9C27B0'
+    };
+    active.forEach(function(i){
+      var s = i.fields.status ? i.fields.status.name : 'Autre';
+      statusCounts[s] = (statusCounts[s]||0) + 1;
+    });
+    var barHtml = '';
+    var labelParts = [];
+    Object.keys(statusCounts).forEach(function(s){
+      var pct = (statusCounts[s] / active.length * 100);
+      var color = statusColors[s] || '#D8DBE8';
+      barHtml += '<span style="width:'+pct+'%;background:'+color+';"></span>';
+      labelParts.push(statusCounts[s] + ' ' + s);
+    });
+    document.getElementById('kpi-bar').innerHTML = barHtml;
+    document.getElementById('kpi-statuts').textContent = labelParts.join(' · ');
+
+    // Data quality
+    var withDeadline = active.filter(function(i){ return i.fields.duedate; }).length;
+    var pctEst = active.length ? Math.round(withEst/active.length*100) : 0;
+    var pctDl = active.length ? Math.round(withDeadline/active.length*100) : 0;
+    var qClass = pctEst >= 80 ? 'kpi-quality-good' : pctEst >= 50 ? 'kpi-quality-warn' : 'kpi-quality-bad';
+    document.getElementById('kpi-quality').innerHTML = '<span class="'+qClass+'">'+pctEst+'%</span> estimées';
+    document.getElementById('kpi-quality-sub').innerHTML = '<span class="'+
+      (pctDl>=80?'kpi-quality-good':pctDl>=50?'kpi-quality-warn':'kpi-quality-bad')
+      +'">'+pctDl+'%</span> ont une deadline';
+  }
+
+  function renderGrouped(mode) {
+    var filtered = getFiltered();
+    var groups = {};
+    filtered.forEach(function(issue){
+      if (mode === 'stream') {
+        var labels = (issue.fields.labels || []).filter(function(l){ return activeStreams.indexOf(l)>-1; });
+        if (labels.length === 0) labels = ['Sans stream'];
+        labels.forEach(function(l){
+          if (!groups[l]) groups[l] = [];
+          groups[l].push(issue);
+        });
+      } else {
+        var name = issue.fields.assignee ? issue.fields.assignee.displayName : 'Non assigné';
+        if (!groups[name]) groups[name] = [];
+        groups[name].push(issue);
+      }
+    });
+
+    // Sort groups
+    var sortedKeys = Object.keys(groups).sort(function(a,b){
+      return groups[b].length - groups[a].length;
+    });
+
+    var html = '';
+    sortedKeys.forEach(function(key){
+      var items = groups[key];
+      // Sort by status order then priority
+      items.sort(function(a,b){
+        var ai = KNOWN_STATUSES.indexOf(a.fields.status?a.fields.status.name:'');
+        var bi = KNOWN_STATUSES.indexOf(b.fields.status?b.fields.status.name:'');
+        if (ai !== bi) return ai - bi;
+        return 0;
+      });
+      var charge = 0;
+      items.forEach(function(i){ if(i.fields.timeoriginalestimate) charge += i.fields.timeoriginalestimate; });
+      var chargeDays = Math.round(charge / SECONDS_PER_DAY * 10) / 10;
+
+      html += '<div class="group">';
+      html += '<div class="group-head">';
+      html += '<div class="group-title">' + esc(key) + ' <span class="group-count">' + items.length + '</span></div>';
+      html += '<div class="group-meta"><span>' + chargeDays + 'j estimés</span></div>';
+      html += '</div>';
+      items.forEach(function(i){ html += renderTask(i); });
+      html += '</div>';
+    });
+
+    if (!html) html = '<div class="loading-state"><p>Aucune tâche ne correspond aux filtres sélectionnés.</p></div>';
+    document.getElementById('content').innerHTML = html;
+  }
+
+  function renderTask(issue) {
+    var f = issue.fields;
+    var key = issue.key;
+    var link = f.customfield_12448;
+    var statusName = f.status ? f.status.name : '';
+    var statusClass = getStatusClass(statusName);
+    var assigneeName = f.assignee ? f.assignee.displayName : '—';
+    var initials = assigneeName !== '—' ? assigneeName.split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase() : '?';
+    var estimate = '';
+    if (f.timetracking && f.timetracking.originalEstimate) {
+      estimate = f.timetracking.originalEstimate;
+    } else if (f.timeoriginalestimate) {
+      var d = f.timeoriginalestimate / SECONDS_PER_DAY;
+      estimate = d >= 1 ? Math.round(d*10)/10 + 'j' : Math.round(f.timeoriginalestimate/3600) + 'h';
+    }
+    var deadline = '';
+    var deadlineClass = '';
+    if (f.duedate) {
+      var dd = new Date(f.duedate);
+      var diff = (dd - new Date()) / (1000*60*60*24);
+      deadline = dd.toLocaleDateString('fr-FR',{day:'numeric',month:'short'});
+      if (diff < 5 && diff >= 0) deadlineClass = ' urgent';
+      if (diff < 0) deadlineClass = ' urgent';
+    }
+
+    var h = '<div class="task-row">';
+    if (link) {
+      h += '<a href="'+esc(link)+'" class="task-key" target="_blank" rel="noopener">'+esc(key)+'</a>';
+    } else {
+      h += '<span class="task-key no-link">'+esc(key)+'</span>';
+    }
+    h += '<span class="task-summary" title="'+esc(f.summary||'')+'">'+esc(f.summary||'')+'</span>';
+    h += '<span><span class="status-badge '+statusClass+'">'+esc(statusName)+'</span></span>';
+    h += '<span class="assignee"><span class="avatar">'+esc(initials)+'</span><span class="assignee-name">'+esc(assigneeName)+'</span></span>';
+    h += '<span class="task-estimate">'+esc(estimate)+'</span>';
+    h += '<span class="task-deadline'+deadlineClass+'">'+esc(deadline)+'</span>';
+    h += '</div>';
+    return h;
+  }
+
+  function renderTimeline() {
+    var active = getActive();
+    var withDates = active.filter(function(i){ return i.fields.duedate; });
+    var pct = active.length ? Math.round(withDates.length / active.length * 100) : 0;
+
+    if (pct < 30) {
+      document.getElementById('content').innerHTML =
+        '<div class="timeline-placeholder"><p>Vue disponible dès que les deadlines sont renseignées dans Jira<br>(' +
+        withDates.length + '/' + active.length + ' tâches ont une deadline — ' + pct + '%).</p></div>';
+      return;
+    }
+
+    // Build timeline
+    var filtered = getFiltered().filter(function(i){ return i.fields.duedate || i.fields.created; });
+    if (filtered.length === 0) {
+      document.getElementById('content').innerHTML = '<div class="timeline-placeholder"><p>Aucune tâche à afficher.</p></div>';
+      return;
+    }
+
+    // Find date range
+    var today = new Date();
+    var minDate = new Date(today);
+    var maxDate = new Date(today);
+    minDate.setDate(minDate.getDate() - 7);
+    maxDate.setDate(maxDate.getDate() + 30);
+
+    filtered.forEach(function(i){
+      var created = new Date(i.fields.created);
+      var due = i.fields.duedate ? new Date(i.fields.duedate) : null;
+      if (created < minDate) minDate = new Date(created);
+      if (due && due > maxDate) maxDate = new Date(due);
+    });
+
+    var totalDays = Math.ceil((maxDate - minDate) / (1000*60*60*24)) + 1;
+    var statusColors = {
+      'À faire':'#8B90A8','CADRAGE':'#F5A623','EN COURS UX':'#E8A317',
+      'EN COURS UI':'#0068FF','EN VALIDATION':'#9C27B0','TERMINÉ':'#42B42A','ANNULÉ':'#E3000F'
+    };
+
+    var html = '<div class="timeline-wrap">';
+    // Header
+    html += '<div class="timeline-header"><div class="timeline-col-label">Tâche</div><div class="timeline-dates">';
+    for (var d = 0; d < totalDays; d++) {
+      var dt = new Date(minDate);
+      dt.setDate(dt.getDate() + d);
+      var isToday = dt.toDateString() === today.toDateString();
+      var label = (d % 3 === 0) ? dt.getDate() + '/' + (dt.getMonth()+1) : '';
+      html += '<div class="timeline-date'+(isToday?' today':'')+'">'+label+'</div>';
+    }
+    html += '</div></div>';
+
+    // Rows
+    filtered.sort(function(a,b){
+      var da = a.fields.duedate || a.fields.created;
+      var db = b.fields.duedate || b.fields.created;
+      return new Date(da) - new Date(db);
+    });
+
+    filtered.forEach(function(i){
+      var f = i.fields;
+      var created = new Date(f.created);
+      var due = f.duedate ? new Date(f.duedate) : null;
+      var color = statusColors[f.status?f.status.name:''] || '#D8DBE8';
+
+      html += '<div class="timeline-row">';
+      html += '<div class="timeline-row-label" title="'+esc(f.summary||'')+'">'+esc(i.key)+' '+esc(f.summary||'')+'</div>';
+      html += '<div class="timeline-bars">';
+
+      if (due) {
+        var startPct = ((created - minDate) / (maxDate - minDate)) * 100;
+        var endPct = ((due - minDate) / (maxDate - minDate)) * 100;
+        html += '<div class="timeline-bar" style="left:'+Math.max(0,startPct)+'%;width:'+Math.max(1,endPct-startPct)+'%;background:'+color+';"></div>';
+      } else {
+        var posPct = ((created - minDate) / (maxDate - minDate)) * 100;
+        html += '<div class="timeline-dot" style="left:'+Math.max(0,posPct)+'%;background:'+color+';"></div>';
+      }
+
+      html += '</div></div>';
+    });
+
+    html += '</div>';
+    document.getElementById('content').innerHTML = html;
+  }
+
+  // ─── HELPERS ──────────────────────────────
+  function getStatusClass(name) {
+    var map = {
+      'À faire':'status-todo','CADRAGE':'status-cadrage',
+      'EN COURS UX':'status-ux','EN COURS UI':'status-ui',
+      'EN VALIDATION':'status-validation','TERMINÉ':'status-done','ANNULÉ':'status-cancelled'
+    };
+    return map[name] || 'status-todo';
+  }
+  function esc(s) {
+    if (!s) return '';
+    var d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML;
+  }
+})();
+</script>
+</body>
+</html>

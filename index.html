@@ -469,6 +469,7 @@
   }
   .cards > *:nth-child(2) { animation-delay: 0.06s; }
   .cards > *:nth-child(3) { animation-delay: 0.12s; }
+  .cards > *:nth-child(4) { animation-delay: 0.18s; }
 
   /* ─── RESPONSIVE ──────────────────────────── */
   @media (max-width: 840px) {
@@ -576,18 +577,28 @@
       </div>
     </div>
 
+    <!-- Roadmap -->
+    <div class="card">
+      <div class="card-accent navy"></div>
+      <div class="card-head">
+        <div class="card-chip"><span class="chip-pip"></span>Jira · Roadmap</div>
+        <h2>Vue <em>roadmap</em></h2>
+      </div>
+      <div class="card-body">
+        <p class="card-desc">Visualisez l'activité de l'équipe design en temps réel — par stream, par designer, par statut.</p>
+        <ul class="card-list">
+          <li><span class="li-pip"></span>Données Jira synchronisées</li>
+          <li><span class="li-pip"></span>Filtres par stream et designer</li>
+          <li><span class="li-pip"></span>Indicateurs de charge</li>
+        </ul>
+        <a href="./roadmap.html" class="btn" target="_blank">Ouvrir la roadmap →</a>
+      </div>
+    </div>
+
     <!-- À venir -->
     <div class="card-coming">
       <div class="coming-chip">⏳ En production</div>
       <h2>Prochains<br>outils</h2>
-      <div class="coming-item">
-        <span class="coming-ico">📊</span>
-        <div>
-          <span class="coming-label">Vue roadmap</span>
-          <span class="coming-sub">État en temps réel par stream</span>
-          <span class="badge">Bientôt</span>
-        </div>
-      </div>
       <div class="coming-item">
         <span class="coming-ico">💡</span>
         <div>
