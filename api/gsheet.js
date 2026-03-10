@@ -35,25 +35,29 @@ export default async function handler(req, res) {
     }
 
     // Row 0 = sub-headers with "XX jours ouvrés"
-    // Row 1 = main headers: LOT | Ressource | Taux remisé | 1/2026 | 2/2026 | ...
+    // Row 1 = main headers: LOT | Ressource | Taux remisé | serial_date | serial_date | ...
     const headerRow = rows[1] || [];
-    // Find month columns: detect columns containing /2026
-    const monthCols = [];
-    const months = [];
-    headerRow.forEach(function(cell, idx) {
-      const s = String(cell || '').trim();
-      if (/^\d{1,2}\/\d{4}$/.test(s)) {
-        monthCols.push(idx);
-        months.push(s);
-      }
-    });
 
-    // Find LOT and Ressource columns
+    // Find LOT and Ressource columns by label
     let lotCol = -1, nameCol = -1;
     headerRow.forEach(function(cell, idx) {
       const s = String(cell || '').toLowerCase().trim();
       if (s === 'lot') lotCol = idx;
       if (s === 'ressource') nameCol = idx;
+    });
+
+    // Find month columns: detect serial date numbers (> 40000)
+    // Convert Excel serial dates to M/YYYY format
+    const monthCols = [];
+    const months = [];
+    headerRow.forEach(function(cell, idx) {
+      if (typeof cell === 'number' && cell > 40000) {
+        // Excel serial date → JS date (Excel epoch = Dec 30, 1899)
+        const date = new Date(Date.UTC(1899, 11, 30 + cell));
+        const m = (date.getUTCMonth() + 1) + '/' + date.getUTCFullYear();
+        monthCols.push(idx);
+        months.push(m);
+      }
     });
 
     const designers = [];
