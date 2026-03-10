@@ -229,23 +229,21 @@
 
   /* ─── TASK ROWS ──────────────────────────── */
   .task-row {
-    display: flex; flex-direction: column; gap: 6px;
+    display: grid;
+    grid-template-columns: 72px 1fr 120px 130px 60px 80px;
+    align-items: center; gap: 8px;
     padding: 10px 20px;
     border-bottom: 1px solid var(--s100);
+    font-size: 13px;
     transition: background 0.1s;
   }
   .task-row:last-child { border-bottom: none; }
   .task-row:hover { background: var(--s50); }
 
-  .task-main {
-    display: flex; align-items: center; gap: 10px;
-    min-width: 0;
-  }
-
   .task-key {
     font-family: 'JetBrains Mono', monospace;
     font-size: 11px; font-weight: 500; color: var(--blue);
-    text-decoration: none; flex-shrink: 0;
+    text-decoration: none;
   }
   .task-key:hover { text-decoration: underline; }
 
@@ -254,13 +252,8 @@
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
 
-  .task-meta {
-    display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
-    padding-left: 0;
-  }
-
   .status-badge {
-    font-size: 10px; font-weight: 700; padding: 2px 7px;
+    font-size: 10px; font-weight: 700; padding: 3px 8px;
     border-radius: 4px; letter-spacing: 0.02em;
     white-space: nowrap; display: inline-block;
   }
@@ -272,17 +265,22 @@
   .status-done      { background: rgba(66,180,42,0.12); color: #2E8020; }
   .status-cancelled { background: rgba(227,0,15,0.10); color: #A8000B; }
 
-  .task-chip {
-    font-size: 10px; font-weight: 500; padding: 2px 8px;
-    border-radius: 4px; white-space: nowrap;
-    background: var(--s50); color: var(--s600); border: 1px solid var(--s100);
+  .task-assignee {
+    font-size: 12px; color: var(--s600);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
-  .estimate-chip {
+
+  .task-estimate {
     font-family: 'JetBrains Mono', monospace;
-    color: var(--s400);
+    font-size: 11px; color: var(--s400);
   }
-  .deadline-chip { color: var(--s400); }
-  .deadline-chip.urgent { color: var(--red); background: rgba(227,0,15,0.06); border-color: rgba(227,0,15,0.15); font-weight: 600; }
+
+  .task-deadline {
+    font-size: 11px; color: var(--s400);
+  }
+  .task-deadline.urgent {
+    color: var(--red); font-weight: 600;
+  }
 
   /* ─── TIMELINE ───────────────────────────── */
   .timeline-placeholder {
@@ -376,6 +374,12 @@
   /* ─── RESPONSIVE ─────────────────────────── */
   @media (max-width: 900px) {
     .kpis { grid-template-columns: repeat(2, 1fr); }
+    .task-row {
+      grid-template-columns: 60px 1fr 110px;
+    }
+    .task-row .task-assignee,
+    .task-row .task-estimate,
+    .task-row .task-deadline { display: none; }
   }
   @media (max-width: 640px) {
     .kpis { grid-template-columns: 1fr; }
@@ -760,7 +764,7 @@
     var jiraUrl = 'https://useradgents.atlassian.net/browse/' + key;
     var statusName = f.status ? f.status.name : '';
     var statusClass = getStatusClass(statusName);
-    var assigneeName = f.assignee ? f.assignee.displayName : '';
+    var assigneeName = f.assignee ? f.assignee.displayName : '—';
     var estimate = '';
     if (f.timetracking && f.timetracking.originalEstimate) {
       estimate = f.timetracking.originalEstimate;
@@ -779,16 +783,12 @@
     }
 
     var h = '<div class="task-row">';
-    h += '<div class="task-main">';
     h += '<a href="'+esc(jiraUrl)+'" class="task-key" target="_blank" rel="noopener">'+esc(key)+'</a>';
     h += '<span class="task-summary" title="'+esc(f.summary||'')+'">'+esc(f.summary||'')+'</span>';
-    h += '</div>';
-    h += '<div class="task-meta">';
-    h += '<span class="status-badge '+statusClass+'">'+esc(statusName)+'</span>';
-    if (assigneeName) h += '<span class="task-chip assignee-chip">'+esc(assigneeName)+'</span>';
-    if (estimate) h += '<span class="task-chip estimate-chip">'+esc(estimate)+'</span>';
-    if (deadline) h += '<span class="task-chip deadline-chip'+deadlineClass+'">'+esc(deadline)+'</span>';
-    h += '</div>';
+    h += '<span><span class="status-badge '+statusClass+'">'+esc(statusName)+'</span></span>';
+    h += '<span class="task-assignee">'+esc(assigneeName)+'</span>';
+    h += '<span class="task-estimate">'+esc(estimate)+'</span>';
+    h += '<span class="task-deadline'+deadlineClass+'">'+esc(deadline)+'</span>';
     h += '</div>';
     return h;
   }
