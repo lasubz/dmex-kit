@@ -39,7 +39,15 @@ export default async function handler(req, res) {
       projects = (data.values || []).map(p => ({ key: p.key, name: p.name, id: p.id }));
     }
 
-    return res.status(200).json({ authStatus: meStatus, user: me, totalProjects: projects.length, projects });
+    return res.status(200).json({
+      emailUsed: JIRA_EMAIL,
+      tokenPrefix: JIRA_API_TOKEN.substring(0, 10) + '...',
+      tokenLength: JIRA_API_TOKEN.length,
+      authStatus: meStatus,
+      user: me,
+      totalProjects: projects.length,
+      projects
+    });
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }
