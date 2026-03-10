@@ -240,6 +240,15 @@
   .task-row:last-child { border-bottom: none; }
   .task-row:hover { background: var(--s50); }
 
+  .task-child {
+    grid-template-columns: 16px 72px 1fr 120px 130px 60px 80px;
+    background: var(--s50);
+  }
+  .child-indent {
+    font-size: 11px; color: var(--s200); font-family: 'JetBrains Mono', monospace;
+    line-height: 1;
+  }
+
   .task-key {
     font-family: 'JetBrains Mono', monospace;
     font-size: 11px; font-weight: 500; color: var(--blue);
@@ -750,7 +759,16 @@
       html += '<div class="group-title">' + esc(key) + ' <span class="group-count">' + items.length + '</span></div>';
       html += '<div class="group-meta"><span>' + chargeDays + 'j estimés</span></div>';
       html += '</div>';
-      items.forEach(function(i){ html += renderTask(i); });
+      // Build parent→children tree
+      var tree = buildTree(items);
+      tree.forEach(function(node){
+        html += renderTask(node.issue, false);
+        if (node.children.length) {
+          node.children.forEach(function(child){
+            html += renderTask(child, true);
+          });
+        }
+      });
       html += '</div>';
     });
 
@@ -758,7 +776,31 @@
     document.getElementById('content').innerHTML = html;
   }
 
-  function renderTask(issue) {
+  function buildTree(items) {
+    // Index all items by key
+    var byKey = {};
+    items.forEach(function(i){ byKey[i.key] = i; });
+    // Identify children (those whose parent is also in the list)
+    var childKeys = {};
+    items.forEach(function(i){
+      var p = i.fields.parent;
+      if (p && byKey[p.key]) childKeys[i.key] = p.key;
+    });
+    // Build ordered list: parents/standalone first, children nested
+    var result = [];
+    items.forEach(function(i){
+      if (childKeys[i.key]) return; // skip children, they'll be added under parent
+      var node = { issue: i, children: [] };
+      // Find children of this item in the list
+      items.forEach(function(c){
+        if (childKeys[c.key] === i.key) node.children.push(c);
+      });
+      result.push(node);
+    });
+    return result;
+  }
+
+  function renderTask(issue, isChild) {
     var f = issue.fields;
     var key = issue.key;
     var jiraUrl = 'https://useradgents.atlassian.net/browse/' + key;
@@ -782,7 +824,9 @@
       if (diff < 0) deadlineClass = ' urgent';
     }
 
-    var h = '<div class="task-row">';
+    var rowClass = 'task-row' + (isChild ? ' task-child' : '');
+    var h = '<div class="' + rowClass + '">';
+    if (isChild) h += '<span class="child-indent">└</span>';
     h += '<a href="'+esc(jiraUrl)+'" class="task-key" target="_blank" rel="noopener">'+esc(key)+'</a>';
     h += '<span class="task-summary" title="'+esc(f.summary||'')+'">'+esc(f.summary||'')+'</span>';
     h += '<span><span class="status-badge '+statusClass+'">'+esc(statusName)+'</span></span>';
