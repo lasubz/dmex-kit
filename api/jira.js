@@ -14,7 +14,7 @@ export default async function handler(req, res) {
     fields: [
       'summary', 'status', 'assignee', 'issuetype', 'labels',
       'priority', 'duedate', 'timeoriginalestimate', 'timetracking',
-      'created'
+      'created', 'parent', 'subtasks'
     ]
   };
 
