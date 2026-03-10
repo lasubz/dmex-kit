@@ -308,6 +308,42 @@
     color: var(--red); font-weight: 600;
   }
 
+  /* ─── CAPACITY TABLE ────────────────────── */
+  .cap-table {
+    background: var(--white); border: 1px solid var(--s200);
+    border-radius: 14px; overflow: hidden;
+  }
+  .cap-row {
+    display: grid; align-items: center;
+    padding: 0; border-bottom: 1px solid var(--s100);
+  }
+  .cap-row:last-child { border-bottom: none; }
+  .cap-row.cap-header {
+    background: var(--s50);
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.06em; color: var(--s400);
+  }
+  .cap-row.cap-header .cap-cell { padding: 10px 8px; }
+  .cap-cell {
+    padding: 10px 8px; text-align: center;
+    font-size: 12px; color: var(--s600);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .cap-cell:first-child { text-align: left; font-weight: 600; color: var(--navy); padding-left: 20px; }
+  .cap-cell:nth-child(2) { text-align: left; color: var(--s400); font-size: 11px; }
+  .cap-month { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  .cap-dispo { font-size: 12px; font-weight: 600; color: var(--navy); }
+  .cap-charge { font-size: 10px; color: var(--s400); }
+  .cap-bar {
+    width: 100%; height: 4px; border-radius: 2px; background: var(--s100);
+    overflow: hidden; margin-top: 3px;
+  }
+  .cap-bar-fill { height: 100%; border-radius: 2px; transition: width 0.3s; }
+  .cap-bar-ok { background: var(--green); }
+  .cap-bar-warn { background: var(--yellow); }
+  .cap-bar-over { background: var(--red); }
+  .cap-current { background: rgba(0,104,255,0.04); }
+
   /* ─── TIMELINE ───────────────────────────── */
   .timeline-placeholder {
     background: var(--white); border: 1px solid var(--s200);
@@ -504,6 +540,7 @@
       <div class="view-toggle">
         <button class="view-btn active" data-view="stream">Par stream</button>
         <button class="view-btn" data-view="designer">Par designer</button>
+        <button class="view-btn" data-view="capacity">Capacité</button>
         <button class="view-btn" data-view="timeline">Timeline</button>
       </div>
     </div>
@@ -553,6 +590,7 @@
 
   // ─── STATE ────────────────────────────────
   var allIssues = [];
+  var capacityData = null;
   var activeStreams = KNOWN_STREAMS.slice();
   var activeStatuses = KNOWN_STATUSES.filter(function(s){ return DEFAULT_HIDDEN.indexOf(s)===-1; });
   var currentView = 'stream';
@@ -562,6 +600,7 @@
   initFilters();
   initViewToggle();
   loadData(false);
+  loadCapacity();
 
   // ─── DATA LOADING ─────────────────────────
   function loadData(force) {
@@ -605,6 +644,29 @@
         }
         return issues;
       });
+  }
+
+  // ─── CAPACITY DATA ──────────────────────────
+  function loadCapacity() {
+    var cached = getCachedCapacity();
+    if (cached) { capacityData = cached.data; return; }
+    fetch('/api/gsheet')
+      .then(function(r){ if(!r.ok) throw new Error(r.status); return r.json(); })
+      .then(function(data){
+        capacityData = data;
+        try { localStorage.setItem('dmex_capacity_cache', JSON.stringify({data:data, timestamp:Date.now()})); } catch(e){}
+        if (currentView === 'capacity') render();
+      })
+      .catch(function(){ /* silent fail — capacity is optional */ });
+  }
+  function getCachedCapacity() {
+    try {
+      var raw = localStorage.getItem('dmex_capacity_cache');
+      if (!raw) return null;
+      var d = JSON.parse(raw);
+      if (Date.now() - d.timestamp > 30 * 60 * 1000) return null; // 30 min TTL
+      return d;
+    } catch(e){ return null; }
   }
 
   // ─── CACHE ────────────────────────────────
@@ -685,6 +747,7 @@
     renderKPIs();
     if (currentView === 'stream') renderGrouped('stream');
     else if (currentView === 'designer') renderGrouped('designer');
+    else if (currentView === 'capacity') renderCapacity();
     else renderTimeline();
   }
 
@@ -878,6 +941,85 @@
     h += '<span class="task-deadline'+deadlineClass+'">'+esc(deadline)+'</span>';
     h += '</div>';
     return h;
+  }
+
+  function renderCapacity() {
+    if (!capacityData) {
+      document.getElementById('content').innerHTML = '<div class="loading-state"><div class="spinner"></div><p>Chargement des données de capacité…</p></div>';
+      return;
+    }
+
+    // Current month key (e.g. "3/2026")
+    var now = new Date();
+    var currentMonthKey = (now.getMonth() + 1) + '/' + now.getFullYear();
+
+    // Compute Jira charge per designer per month (from active issues with estimates)
+    var chargeByDesigner = {};
+    allIssues.forEach(function(issue) {
+      var f = issue.fields;
+      var cat = f.status && f.status.statusCategory ? f.status.statusCategory.name : '';
+      if (cat === 'Terminé' || (f.status && f.status.name === 'ANNULÉ')) return;
+      var name = f.assignee ? f.assignee.displayName : null;
+      if (!name || !f.timeoriginalestimate) return;
+      if (!chargeByDesigner[name]) chargeByDesigner[name] = 0;
+      chargeByDesigner[name] += f.timeoriginalestimate / SECONDS_PER_DAY;
+    });
+
+    // Determine which months to show (current + next 3)
+    var allMonths = capacityData.months || [];
+    var startIdx = allMonths.indexOf(currentMonthKey);
+    if (startIdx === -1) startIdx = 0;
+    var visibleMonths = allMonths.slice(startIdx, startIdx + 4);
+    var monthLabels = ['Jan','Fév','Mar','Avr','Mai','Juin','Juil','Aoû','Sep','Oct','Nov','Déc'];
+
+    // Grid columns: name + lot + months
+    var cols = '180px 80px' + visibleMonths.map(function(){ return ' 1fr'; }).join('');
+
+    var html = '<div class="cap-table">';
+    // Header
+    html += '<div class="cap-row cap-header" style="grid-template-columns:' + cols + '">';
+    html += '<div class="cap-cell">Designer</div>';
+    html += '<div class="cap-cell">Lot</div>';
+    visibleMonths.forEach(function(m) {
+      var parts = m.split('/');
+      var label = monthLabels[parseInt(parts[0]) - 1] + ' ' + parts[1].substring(2);
+      var isCurrent = m === currentMonthKey;
+      html += '<div class="cap-cell' + (isCurrent ? ' cap-current' : '') + '">' + label + '</div>';
+    });
+    html += '</div>';
+
+    // Designer rows
+    capacityData.designers.forEach(function(d) {
+      if (!d.name) return;
+      var totalCharge = chargeByDesigner[d.name] || 0;
+      // Spread charge evenly across visible months (simplified — Jira doesn't have per-month data)
+      var chargePerMonth = visibleMonths.length ? totalCharge / visibleMonths.length : 0;
+
+      html += '<div class="cap-row" style="grid-template-columns:' + cols + '">';
+      html += '<div class="cap-cell">' + esc(d.name) + '</div>';
+      html += '<div class="cap-cell">' + esc(d.lot) + '</div>';
+
+      visibleMonths.forEach(function(m) {
+        var dispo = d.availability[m] || 0;
+        var isCurrent = m === currentMonthKey;
+        var pct = dispo > 0 ? Math.min(100, Math.round(chargePerMonth / dispo * 100)) : 0;
+        var barClass = pct <= 70 ? 'cap-bar-ok' : pct <= 90 ? 'cap-bar-warn' : 'cap-bar-over';
+
+        html += '<div class="cap-cell' + (isCurrent ? ' cap-current' : '') + '">';
+        html += '<div class="cap-month">';
+        html += '<span class="cap-dispo">' + dispo + 'j</span>';
+        if (chargePerMonth > 0) {
+          html += '<span class="cap-charge">' + Math.round(chargePerMonth * 10) / 10 + 'j chargés</span>';
+          html += '<div class="cap-bar"><div class="cap-bar-fill ' + barClass + '" style="width:' + pct + '%"></div></div>';
+        }
+        html += '</div></div>';
+      });
+
+      html += '</div>';
+    });
+
+    html += '</div>';
+    document.getElementById('content').innerHTML = html;
   }
 
   function renderTimeline() {
