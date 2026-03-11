@@ -178,6 +178,33 @@
     transform: translateY(-4px);
   }
 
+  /* ── Carte désactivée (pas encore en prod) ── */
+  .card-disabled {
+    opacity: 0.45;
+    pointer-events: none;
+    position: relative;
+    filter: grayscale(0.5);
+  }
+  .card-disabled .btn,
+  .card-disabled .btn-disabled {
+    background: var(--s300);
+    color: var(--s500);
+    cursor: default;
+  }
+  .card-disabled .card-badge-soon {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    background: var(--s200);
+    color: var(--s500);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: 6px;
+  }
+
   .card-accent {
     height: 3px;
   }
@@ -577,8 +604,9 @@
       </div>
     </div>
 
-    <!-- Roadmap -->
-    <div class="card">
+    <!-- Roadmap — désactivé en prod, retirer .card-disabled pour activer -->
+    <div class="card card-disabled">
+      <span class="card-badge-soon">Bientôt</span>
       <div class="card-accent navy"></div>
       <div class="card-head">
         <div class="card-chip"><span class="chip-pip"></span>Jira · Roadmap</div>
@@ -591,7 +619,7 @@
           <li><span class="li-pip"></span>Filtres par stream et designer</li>
           <li><span class="li-pip"></span>Indicateurs de charge</li>
         </ul>
-        <a href="./roadmap.html" class="btn" target="_blank">Ouvrir la roadmap →</a>
+        <span class="btn btn-disabled">Ouvrir la roadmap →</span>
       </div>
     </div>
 
